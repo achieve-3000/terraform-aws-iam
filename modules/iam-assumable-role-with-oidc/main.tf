@@ -47,7 +47,6 @@ data "aws_iam_policy_document" "assume_role_with_oidc" {
 
       principals {
         type = "Federated"
-
         identifiers = ["arn:${data.aws_partition.current.partition}:iam::${local.aws_account_id}:oidc-provider/${statement.value}"]
       }
 
@@ -82,28 +81,29 @@ data "aws_iam_policy_document" "assume_role_with_oidc" {
       }
     }
   }
+
+  dynamic "statement" {
+    for_each = var.allow_new_trust_relationship ? [1] : []
+
+    content {
+      sid     = var.new_optional_trust_relationship_sid
+      effect  = var.new_optional_effect_relationship
+      actions = var.new_trust_relationship_action
+
+      principals {
+        type        = "AWS"
+        identifiers = [var.new_trust_relationship_principal]
+      }
+
+      dynamic "condition" {
+        for_each = length(keys(var.new_trust_relationship_conditions)) > 0 ? [for k, v in var.new_trust_relationship_conditions : k] : []
+        content {
+          test     = each.value["test"]
+          variable = each.key
+          values   = each.value["values"]
+        }
+      }
+    }
+  }
 }
 
-resource "aws_iam_role" "this" {
-  count = var.create_role ? 1 : 0
-
-  name                 = var.role_name
-  name_prefix          = var.role_name_prefix
-  description          = var.role_description
-  path                 = var.role_path
-  max_session_duration = var.max_session_duration
-
-  force_detach_policies = var.force_detach_policies
-  permissions_boundary  = var.role_permissions_boundary_arn
-
-  assume_role_policy = data.aws_iam_policy_document.assume_role_with_oidc[0].json
-
-  tags = var.tags
-}
-
-resource "aws_iam_role_policy_attachment" "custom" {
-  count = var.create_role ? local.number_of_role_policy_arns : 0
-
-  role       = aws_iam_role.this[0].name
-  policy_arn = var.role_policy_arns[count.index]
-}

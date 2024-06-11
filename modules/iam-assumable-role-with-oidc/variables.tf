@@ -105,3 +105,39 @@ variable "allow_self_assume_role" {
   type        = bool
   default     = false
 }
+
+variable "allow_new_trust_relationship" {
+  description = "Flag to allow the new optional trust relationship"
+  type        = bool
+  default     = false
+}
+
+variable "new_trust_relationship_principal" {
+  description = "The new principal to add to the trust relationship"
+  type        = string
+  default     = ""
+}
+
+variable "new_trust_relationship_action" {
+  description = "The action to allow for the new trust relationship"
+  type        = list(string)
+  default     = ["sts:AssumeRole"]
+}
+
+variable "new_trust_relationship_conditions" {
+  description = "Conditions to add to the new trust relationship"
+  type        = map(any)
+  default     = {}
+}
+
+variable "new_optional_trust_relationship_sid" {
+  description = "Sid for the new trust relationship"
+  type        = string
+  default     = "Statement1"
+}
+
+variable "new_optional_effect_relationship" {
+  description = "Effect for the new trust relationship"
+  type        = string
+  default     = "Allow"
+}
